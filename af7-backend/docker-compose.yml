@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+
+  # ─────────────────────────────────────────
+  # Base de datos PostgreSQL
+  # ─────────────────────────────────────────
+  db:
+    image: postgres:15
+    container_name: af7_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: af7_db
+    ports:
+      - "5434:5432"   # Puerto 5434 en el host para no colisionar con cursoteca_db (5433)
+    volumes:
+      - af7_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d af7_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────
+  # Backend Node.js + Express
+  # ─────────────────────────────────────────
+  backend:
+    build: .
+    container_name: af7_backend
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: db           # Nombre del servicio dentro de la red Docker
+      DB_PORT: 5432         # Puerto interno del contenedor PostgreSQL
+      DB_NAME: af7_db
+      DB_USER: admin
+      DB_PASSWORD: admin123
+      PORT: 3000
+    depends_on:
+      db:
+        condition: service_healthy   # Espera a que PostgreSQL esté listo
+    restart: unless-stopped
+
+volumes:
+  af7_pgdata:
