@@ -4,13 +4,14 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.af7.data.model.Report
 import com.example.af7.data.model.Todo
 
-// Si haces cambios en el modelo Todo, puedes subir la version a 2
-@Database(entities = [Todo::class], version = 2, exportSchema = false)
+@Database(entities = [Todo::class, Report::class], version = 3, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun todoDao(): TodoDao
+    abstract fun reportDao(): ReportDao
 
     companion object {
         @Volatile

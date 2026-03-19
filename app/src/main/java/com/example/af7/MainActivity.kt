@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.getValue
@@ -59,7 +60,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             AF7Theme {
                 val navController = rememberNavController()
-                val screens = listOf(Screen.Home, Screen.Stats, Screen.Settings)
+                val screens = listOf(Screen.Home, Screen.Stats, Screen.Reports, Screen.Settings)
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -74,6 +75,7 @@ class MainActivity : ComponentActivity() {
                                         when (screen) {
                                             Screen.Home -> Icon(Icons.Default.Home, contentDescription = null)
                                             Screen.Stats -> Icon(Icons.Default.Info, contentDescription = null)
+                                            Screen.Reports -> Icon(Icons.Default.MailOutline, contentDescription = null)
                                             Screen.Settings -> Icon(Icons.Default.Settings, contentDescription = null)
                                         }
                                     },

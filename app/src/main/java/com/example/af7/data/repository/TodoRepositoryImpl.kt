@@ -1,6 +1,8 @@
 package com.example.af7.data.repository
 
+import com.example.af7.data.local.ReportDao
 import com.example.af7.data.local.TodoDao
+import com.example.af7.data.model.Report
 import com.example.af7.data.model.Todo
 import com.example.af7.data.remote.ApiService
 import kotlinx.coroutines.Dispatchers
@@ -9,10 +11,12 @@ import kotlinx.coroutines.withContext
 
 class TodoRepositoryImpl(
     private val todoDao: TodoDao,
+    private val reportDao: ReportDao,
     private val apiService: ApiService
 ) : TodoRepository {
 
     override val todos: Flow<List<Todo>> = todoDao.getAllTodos()
+    override val reports: Flow<List<Report>> = reportDao.getAllReports()
 
     override suspend fun refreshTodos() {
         withContext(Dispatchers.IO) {
@@ -24,9 +28,7 @@ class TodoRepositoryImpl(
 
     override suspend fun updateTodoStatus(todoId: Int, isCompleted: Boolean) {
         withContext(Dispatchers.IO) {
-            // Actualizamos local primero (UI fluida)
             todoDao.updateTodoStatus(todoId, isCompleted)
-            // Sincronizamos con PostgreSQL
             apiService.updateTodoStatus(todoId, mapOf("completed" to isCompleted))
         }
     }
@@ -35,15 +37,38 @@ class TodoRepositoryImpl(
         withContext(Dispatchers.IO) {
             try {
                 val newTodo = Todo(title = title)
-                // Enviamos al servidor
                 val savedTodo = apiService.createTodo(newTodo)
-                // Lo guardamos en local si el servidor nos devuelve un ID válido
                 todoDao.insertTodo(savedTodo)
             } catch (e: Exception) {
                 e.printStackTrace()
-                // Si el servidor no devuelve la tarea bien formateada, no pasa nada,
-                // porque el ViewModel llamará a refreshTodos() justo después y se descargará.
             }
+        }
+    }
+
+    override suspend fun refreshReports() {
+        withContext(Dispatchers.IO) {
+            val remoteReports = apiService.getReports()
+            reportDao.clearReports()
+            reportDao.insertAll(remoteReports)
+        }
+    }
+
+    override suspend fun addReport(description: String) {
+        withContext(Dispatchers.IO) {
+            try {
+                val newReport = Report(description = description)
+                val savedReport = apiService.createReport(newReport)
+                reportDao.insertReport(savedReport)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    override suspend fun updateReportStatus(reportId: Int, isResolved: Boolean) {
+        withContext(Dispatchers.IO) {
+            reportDao.updateReportStatus(reportId, isResolved)
+            apiService.updateReportStatus(reportId, mapOf("resolved" to isResolved))
         }
     }
 }

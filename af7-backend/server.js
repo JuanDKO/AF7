@@ -24,6 +24,15 @@ async function initDatabase() {
     )
   `);
 
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS reports (
+      id          SERIAL PRIMARY KEY,
+      "userId"    INTEGER NOT NULL DEFAULT 1,
+      description TEXT    NOT NULL,
+      resolved    BOOLEAN NOT NULL DEFAULT false
+    )
+  `);
+
   // Insertar datos de ejemplo si la tabla está vacía
   const { rows } = await db.query('SELECT COUNT(*) FROM todos');
   if (parseInt(rows[0].count) === 0) {
@@ -129,6 +138,54 @@ app.delete('/todos/:id', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────
+// Rutas REST — Reports (Informes)
+// ─────────────────────────────────────────────
+
+// GET /reports — Obtener todos los informes
+app.get('/reports', async (req, res) => {
+  try {
+    const { rows } = await db.query('SELECT * FROM reports ORDER BY id DESC');
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al obtener los informes' });
+  }
+});
+
+// POST /reports — Crear un nuevo informe
+app.post('/reports', async (req, res) => {
+  const { userId = 1, description, resolved = false } = req.body;
+  if (!description) return res.status(400).json({ error: 'El campo "description" es obligatorio' });
+  try {
+    const { rows } = await db.query(
+      'INSERT INTO reports ("userId", description, resolved) VALUES ($1, $2, $3) RETURNING *',
+      [userId, description, resolved]
+    );
+    res.status(201).json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al crear el informe' });
+  }
+});
+
+// PATCH /reports/:id — Actualizar estado de un informe
+app.patch('/reports/:id', async (req, res) => {
+  const { resolved } = req.body;
+  if (resolved === undefined) return res.status(400).json({ error: 'El campo "resolved" es obligatorio' });
+  try {
+    const { rows } = await db.query(
+      'UPDATE reports SET resolved = $1 WHERE id = $2 RETURNING *',
+      [resolved, req.params.id]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'Informe no encontrado' });
+    res.json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al actualizar el informe' });
+  }
+});
+
+// ─────────────────────────────────────────────
 // Arrancar servidor
 // ─────────────────────────────────────────────
 initDatabase()
@@ -141,6 +198,9 @@ initDatabase()
       console.log(`   POST   http://localhost:${PORT}/todos`);
       console.log(`   PUT    http://localhost:${PORT}/todos/:id`);
       console.log(`   DELETE http://localhost:${PORT}/todos/:id`);
+      console.log(`   GET    http://localhost:${PORT}/reports`);
+      console.log(`   POST   http://localhost:${PORT}/reports`);
+      console.log(`   PATCH  http://localhost:${PORT}/reports/:id`);
     });
   })
   .catch((err) => {

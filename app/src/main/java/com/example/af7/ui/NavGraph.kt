@@ -6,12 +6,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.af7.ui.home.HomeScreen
+import com.example.af7.ui.reports.ReportsScreen
 import com.example.af7.ui.settings.SettingsScreen
 import com.example.af7.ui.stats.StatsScreen
 
 sealed class Screen(val route: String, val title: String) {
     data object Home : Screen("home", "Inicio")
     data object Stats : Screen("stats", "Estadísticas")
+    data object Reports : Screen("reports", "Informes")
     data object Settings : Screen("settings", "Ajustes")
 }
 
@@ -31,6 +33,9 @@ fun AppNavGraph(
         }
         composable(Screen.Stats.route) {
             StatsScreen(viewModel = viewModel)
+        }
+        composable(Screen.Reports.route) {
+            ReportsScreen(viewModel = viewModel)
         }
         composable(Screen.Settings.route) {
             SettingsScreen(viewModel = viewModel)

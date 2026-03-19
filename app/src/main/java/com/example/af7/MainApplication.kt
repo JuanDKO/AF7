@@ -11,7 +11,7 @@ import com.example.af7.utils.PreferencesManager
 class MainApplication : Application() {
 
     val database by lazy { AppDatabase.getDatabase(this) }
-    val repository by lazy { TodoRepositoryImpl(database.todoDao(), RetrofitClient.apiService) }
+    val repository by lazy { TodoRepositoryImpl(database.todoDao(), database.reportDao(), RetrofitClient.apiService) }
     val preferencesManager by lazy { PreferencesManager(this) }
     val notificationManager by lazy { CustomNotificationManager(this) }
     val bluetoothScanner by lazy { BluetoothScanner(this) }
